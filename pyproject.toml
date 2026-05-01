@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comtex"
+version = "0.0.1"
+description = "Reusable functions for media complexity."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Amy Hume" }
+]
+dependencies = [
+    "pandas",
+    "numpy",
+    "opencv-python",
+    "librosa",
+    "scipy",
+    "matplotlib"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["comtex*"]

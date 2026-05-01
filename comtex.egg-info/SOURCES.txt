@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+setup.py
+comtex/__init__.py
+comtex/audio.py
+comtex/utils.py
+comtex.egg-info/PKG-INFO
+comtex.egg-info/SOURCES.txt
+comtex.egg-info/dependency_links.txt
+comtex.egg-info/requires.txt
+comtex.egg-info/top_level.txt

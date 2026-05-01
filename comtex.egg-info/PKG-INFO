@@ -1,0 +1,20 @@
+Metadata-Version: 2.4
+Name: comtex
+Version: 0.0.1
+Summary: Reusable functions for media complexity.
+Home-page: https://github.com/amyhume/ComTex
+Author: Amy Hume
+Author-email: amyhume66@gmail.com
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: opencv-python
+Requires-Dist: librosa
+Requires-Dist: scipy
+Requires-Dist: matplotlib
+Dynamic: author-email
+Dynamic: home-page
+Dynamic: requires-python
+
+# ComTex
