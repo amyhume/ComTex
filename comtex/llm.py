@@ -137,6 +137,10 @@ class LMHeadModel:
 
         return surprisal, entropy
 
+def log_step(step, msg):
+    print(f"\n[{step}] {msg}")
+    print("=" * 50)
+
 def load_llm(model_name='EleutherAI/pythia-1b', device=None):
 
     if device is None:
