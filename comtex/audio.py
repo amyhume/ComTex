@@ -196,7 +196,6 @@ def get_spectral_flux(audio_path, output_path, ws=0.2, hs=0.02):
         SF[window] = sum(abs(B_sub_previous[1:freq_max_of_interest] - B_sub_next[1:freq_max_of_interest]))
         SF_norm[window] = sum(abs((B_sub_previous[1:freq_max_of_interest])/np.sum((B_sub_previous[1:freq_max_of_interest])) - (B_sub_next[1:freq_max_of_interest])/np.sum(B_sub_next[1:freq_max_of_interest])))
 
-        os.makedirs(output_path, exist_ok=True)
         np.save(output_path, SF)
 
     return SF,SF_norm
