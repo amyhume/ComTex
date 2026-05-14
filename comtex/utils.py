@@ -1,2 +1,3 @@
-def package_is_working():
-    print('YAY')
+def log_step(step, msg):
+    print(f"\n[{step}] {msg}")
+    print("=" * 50)
