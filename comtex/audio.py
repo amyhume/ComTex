@@ -15,6 +15,7 @@ from scipy.special import rel_entr
 from scipy.signal import butter, filtfilt, hilbert, chirp
 from scipy.fftpack import fft, rfft
 from scipy.io import wavfile as io
+from comtex.utils import *
 
 def extract_audio_from_mp4(video_path, output_path):
 	# ffmpeg command: extract mono WAV (16-bit PCM)
@@ -201,6 +202,6 @@ def get_spectral_flux(audio_path, output_path, ws=0.2, hs=0.02):
     if '.npz' in output_path:
         np.savez_compressed(output_path, spectral_flux=SF, time_s=time_s)
     else:
-        f"Couldn't save file: must be .npz format. Returning SF series still"
+        print(f"Couldn't save file: must be .npz format. Returning SF series still")
 
     return SF, SF_norm, time_s

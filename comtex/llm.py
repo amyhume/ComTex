@@ -7,6 +7,7 @@ import re
 import pylzma
 import os
 import string
+from comtex.utils import *
 
 # ---------------------------
 # LM wrapper class
