@@ -161,7 +161,7 @@ def get_spectral_flux(audio_path, output_path, ws=0.2, hs=0.02):
     x_total = normalize(x,20)
 
     N = len(x_total)
-    rate = 44100
+    rate = sr
     #compute number of windows based on lenght, ws and hs.
     nb_window = math.floor((N - (ws*rate))/(hs*rate)) + 1
     print('nb window = ', nb_window)
@@ -196,6 +196,11 @@ def get_spectral_flux(audio_path, output_path, ws=0.2, hs=0.02):
         SF[window] = sum(abs(B_sub_previous[1:freq_max_of_interest] - B_sub_next[1:freq_max_of_interest]))
         SF_norm[window] = sum(abs((B_sub_previous[1:freq_max_of_interest])/np.sum((B_sub_previous[1:freq_max_of_interest])) - (B_sub_next[1:freq_max_of_interest])/np.sum(B_sub_next[1:freq_max_of_interest])))
 
-        np.save(output_path, SF)
+    time_s = np.arange(len(SF)) * hs
 
-    return SF,SF_norm
+    if '.npz' in output_path:
+        np.savez_compressed(output_path, spectral_flux=SF, time_s=time_s)
+    else:
+        f"Couldn't save file: must be .npz format. Returning SF series still"
+
+    return SF, SF_norm, time_s
