@@ -3,8 +3,16 @@ import subprocess
 from pathlib import Path
 import cv2
 import numpy as np
+import torch
 
+print(torch.cuda.is_available())
+print(torch.cuda.get_device_name(0))
+
+#must be used with torch - needs env flicker_pgu 
 def compute_flicker(video_path, output_path):
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("no batch version")
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print(f"Warning: Cannot open video {video_path}")
@@ -22,34 +30,47 @@ def compute_flicker(video_path, output_path):
         print(f"Warning: Cannot read first frame of {video_path}")
         return None, None, None, None
 
+    # convert to tensor on GPU
     prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
+    prev_t = torch.from_numpy(prev_gray).float().to(device)
+
     flickers = []
 
     while True:
         ret, frame = cap.read()
         if not ret:
             break
+
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray_t = torch.from_numpy(gray).float().to(device)
 
-        diff = np.abs(gray.astype(np.float32) - prev_gray.astype(np.float32))
-        flickers.append(diff.mean())
+        # GPU abs diff
+        diff = torch.abs(gray_t - prev_t)
 
-        prev_gray = gray
+        # mean flicker (on GPU)
+        flicker_val = diff.mean().item()
+
+        flickers.append(flicker_val)
+
+        prev_t = gray_t
 
     cap.release()
+
     if len(flickers) == 0:
         return None, None, None, None
 
     flickers = np.array(flickers, dtype=np.float32)
-    time_s = np.arange(len(flickers)) / fps
+
+    time_s = np.arange(len(flickers), dtype=np.float32) / fps
+
     mean_flicker = float(np.mean(flickers))
     std_flicker = float(np.std(flickers))
 
     if '.npz' in output_path:
         np.savez_compressed(output_path, flicker=flickers, time_s=time_s)
     else:
-        print(f"Couldn't save file: must be .npz format. Returning SF series still")
-    
+        print("Couldn't save file: must be .npz format. Returning SF series still")
+
     return mean_flicker, std_flicker, flickers, time_s
 
 def extract_frames_ffmpeg(video_path, frames_dir, fps=1):

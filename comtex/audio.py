@@ -167,7 +167,6 @@ def get_spectral_flux(audio_path, output_path, ws=0.2, hs=0.02):
     nb_window = math.floor((N - (ws*rate))/(hs*rate)) + 1
     print('nb window = ', nb_window)
     SF = np.zeros(nb_window)
-    SF_norm = np.zeros(nb_window)
     #set maximum frequency of interest to 3000Hz
     freq_max_of_interest = math.floor(3000 * ws)
     for window in range(nb_window):
@@ -195,7 +194,6 @@ def get_spectral_flux(audio_path, output_path, ws=0.2, hs=0.02):
         
         # compute the spectral flux as the sum of the absolute differences in amplitude across frequency
         SF[window] = sum(abs(B_sub_previous[1:freq_max_of_interest] - B_sub_next[1:freq_max_of_interest]))
-        SF_norm[window] = sum(abs((B_sub_previous[1:freq_max_of_interest])/np.sum((B_sub_previous[1:freq_max_of_interest])) - (B_sub_next[1:freq_max_of_interest])/np.sum(B_sub_next[1:freq_max_of_interest])))
 
     time_s = np.arange(len(SF)) * hs
 
@@ -204,4 +202,4 @@ def get_spectral_flux(audio_path, output_path, ws=0.2, hs=0.02):
     else:
         print(f"Couldn't save file: must be .npz format. Returning SF series still")
 
-    return SF, SF_norm, time_s
+    return SF, time_s
