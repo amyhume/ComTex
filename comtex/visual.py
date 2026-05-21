@@ -5,9 +5,6 @@ import cv2
 import numpy as np
 import torch
 
-print(torch.cuda.is_available())
-print(torch.cuda.get_device_name(0))
-
 #must be used with torch - needs env flicker_pgu 
 def compute_flicker(video_path, output_path):
 
