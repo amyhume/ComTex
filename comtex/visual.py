@@ -15,7 +15,7 @@ def compute_flicker(video_path, output_path):
     else:
         device = torch.device('cpu')
 
-    print("no batch version")
+    print(f"Using device: {device}")
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print(f"Warning: Cannot open video {video_path}")
