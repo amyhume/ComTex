@@ -8,7 +8,10 @@ import torch
 #must be used with torch - needs env flicker_pgu 
 def compute_flicker(video_path, output_path):
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available()
+                          else 'mps' if torch.backends.mps.is_available() 
+                          else "cpu")
+    
     print("no batch version")
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
