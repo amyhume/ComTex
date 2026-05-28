@@ -31,7 +31,7 @@ def extract_audio_from_mp4(video_path, output_path):
 	return print('extracted audio for ', video_path)
 
 #TRANSCRIPTION FUNCTIONS
-def load_whisperx_model(model_name='large_v3', device=None, compute_type=None):
+def load_whisperx_model(model_name='large-v3', device=None, compute_type=None):
 
     if device is None:
           device = 'cuda' if torch.cuda.is_available() else 'cpu'
