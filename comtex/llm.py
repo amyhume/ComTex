@@ -176,8 +176,9 @@ def llm_process_words(words, lm):
             all_mean_surprisal.append(word_mean_surprisal)
             all_entropy.append(word_entropy)
         
-            print(f"{idx+1}/{len(words)} {word} -> {incoming_word_length} Tokens: {tokens}, Sum Surprisal: {word_sum_surprisal}, Mean Surprisal: {word_mean_surprisal}")
-
+            if idx % 20 == 0:
+                print(f"Processed {idx+1}/{len(df)}")
+                
         all_hidden_states = np.array(all_hidden_states, dtype=np.float32)
         return all_hidden_states, all_sum_surprisal, all_mean_surprisal, all_entropy, all_tokens
     
