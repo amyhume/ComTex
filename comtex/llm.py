@@ -70,7 +70,7 @@ class LMHeadModel:
         probs = torch.exp(log_probs)
         token_entropy = -(probs * log_probs).sum().item() / np.log(2)
         
-        return token_surprisal, token_entropy
+        return token_surprisal, token_entropy, probs
     
     #This function processes a token given the self context values etc., and advances model forward 1 token
     def step(self, tid):
@@ -152,7 +152,7 @@ def llm_process_words(words, lm):
                 
                 #calculate surprisal before processing the incoming token
                 if lm.last_logits is not None:
-                    token_surprisal, token_entropy = lm.compute_token_surprisal(tid)
+                    token_surprisal, token_entropy, probs = lm.compute_token_surprisal(tid)
                     word_sum_surprisal += token_surprisal 
                     if i == 0:
                         word_entropy = token_entropy
