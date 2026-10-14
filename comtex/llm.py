@@ -23,7 +23,7 @@ class LMHeadModel:
         #2. Loading Model
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            dtype=torch.float16 if device == "cuda" else torch.float32
+            torch_dtype=torch.float16 if device == "cuda" else torch.float32
             ).to(device)
         
         self.model.eval()
@@ -118,7 +118,7 @@ def llm_process_words(words, lm):
 
     with torch.no_grad():
         for idx, word in enumerate(words):
-            
+            print(word)
             word_for_model = word if idx == 0 else " " + word
             token_ids = lm.tokenizer(word_for_model, add_special_tokens=False)['input_ids']
             tokens = lm.tokenizer.convert_ids_to_tokens(token_ids)
@@ -310,7 +310,7 @@ def process_transcript(input_csv, output_folder, model_name, device, max_dur = N
     
     return df
 
-def run_folder(folder, model_name, device, max_dur=None,out_dir=None):
+def run_transcript_folder(folder, model_name, device, max_dur=None,out_dir=None):
     safe_model = model_name.replace('/', "_")
     
     if out_dir is None:
@@ -330,3 +330,119 @@ def run_folder(folder, model_name, device, max_dur=None,out_dir=None):
         print(f"\n=== Processing {fname} ===")
         
         process_transcript(in_path, out_dir, model_name, device, max_dur)
+        
+        
+#FUNCTIONS FOR PROCESSING FRAME CAPTIONS
+def llm_process_captions(captions, lm):
+    """ 
+    Takes a list of frame captions, then for each one it goes word by word to calculate word level surprisal
+    at frame level, returns mean surprisal and entropy
+    also returns the hidden states for the last word of each frame 
+    
+    """
+    mean_caption_sum_surprisals = []
+    mean_caption_mean_surprisals = []
+    mean_caption_entropies = []
+    caption_hidden_states = []
+    
+    for idx, caption in enumerate(captions):
+        print(f"=== Caption {idx}/{len(captions)}")
+        words = caption.split(" ")
+        hidden_states, sum_surprisals, mean_surprisals, entropies, tokens = llm_process_words(words, lm)
+        
+        mean_caption_sum_surprisals.append(np.nanmean(sum_surprisals))
+        mean_caption_mean_surprisals.append(np.nanmean(mean_surprisals))
+        mean_caption_entropies.append(np.nanmean(entropies))
+        caption_hidden_states.append(hidden_states[-1])
+    
+    caption_hidden_states = np.array(caption_hidden_states, dtype=np.float32)
+    
+    return caption_hidden_states, mean_caption_sum_surprisals, mean_caption_mean_surprisals, mean_caption_entropies
+
+def process_frame_captions(input_csv, output_folder, model_name, device, max_dur=None):
+    base_name = os.path.splitext(os.path.basename(input_csv))[0]
+    
+    print("================================")
+    print("1. Reading csv")
+    
+    try:
+        df = pd.read_csv(input_csv)
+    except Exception as e:
+        print(f"SKIPPED {os.path.basename(input_csv)} - empty frame caption csv")
+        return
+    
+    n_rows = len(df)
+    
+    if max_dur is not None:
+        if dur > max_dur:
+            print(f"SKIPPED {os.path.basename(input_csv)} - file too long: {dur:.3f}s")
+            return
+        
+    #INITIALISING MODEL
+    print("================================")
+    print("2. Initialising LLM")
+    lm = LMHeadModel(model_name, device)
+    
+    #model info
+    hidden_size = lm.model.config.hidden_size
+    n_layers = lm.model.config.num_hidden_layers
+    
+    
+    captions = df['description'].values
+    #LLM PROCESSING
+    print("================================")
+    print("3. Computing hidden states, surprisals and entropies")
+    hidden_states, sum_surprisals, mean_surprisals, entropies = llm_process_captions(captions, lm)
+    
+    #appending to dataset
+    df['mean_sum_surprisal'] = sum_surprisals
+    df['mean_mean_surprisal'] = mean_surprisals
+    df['mean_entropy'] = entropies
+    
+    print("================================")
+    print("4. Computing kolmogorov complexity")
+    kolmo_complexity = compute_cum_kolmo(captions)
+    df['complexity'] = kolmo_complexity
+    df['inforate'] = df['complexity'].diff()
+    
+    #cosine from embeddings
+    #hidden_states is in shape (word_n, layer_n, dimensions)
+    print("================================")
+    print("5. Computing cosine distance of layer embeddings")
+    layer_dict = {f"layer_{li}": hidden_states[:, li, :] for li in range(hidden_states.shape[1])}
+    
+    for li, layer in enumerate(layer_dict):
+        col_name = f"cosine_l{str(li)}"
+        cos_dist = emb_cosine(layer_dict[layer])
+        df[col_name] = cos_dist
+    
+    #SAVING
+    print("================================")
+    print("6. Saving files")
+    out_path = f"{output_folder}/{os.path.basename(input_csv)}"
+    df.to_csv(out_path, index=False)
+    print(f"saved {out_path}")
+    np.savez_compressed(f"{output_folder}/{base_name}.npz", **layer_dict)  #EDIT PATH
+    print(f"saved {output_folder}/{base_name}.npz")
+        
+    
+def run_caption_folder(folder, model_name, device, max_dur=None,out_dir=None):
+    safe_model = model_name.replace('/', "_")
+    
+    if out_dir is None:
+        out_dir = os.path.join(folder, "output", safe_model)
+    os.makedirs(out_dir, exist_ok=True)
+    
+    files = [f for f in os.listdir(folder) if f.endswith('.csv')]
+    
+    for fname in files:
+        fid = os.path.splitext(fname)[0]
+        in_path = os.path.join(folder, fname)
+        
+        if os.path.exists(f"{out_dir}/{fname}"):
+            print(f"✓ Skipping {fname} (already processed)")
+            continue
+        
+        print(f"\n=== Processing {fname} ===")
+        
+        process_frame_captions(in_path, out_dir, model_name, device, max_dur)
