@@ -118,7 +118,6 @@ def llm_process_words(words, lm):
 
     with torch.no_grad():
         for idx, word in enumerate(words):
-            print(word)
             word_for_model = word if idx == 0 else " " + word
             token_ids = lm.tokenizer(word_for_model, add_special_tokens=False)['input_ids']
             tokens = lm.tokenizer.convert_ids_to_tokens(token_ids)
