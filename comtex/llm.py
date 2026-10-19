@@ -117,7 +117,8 @@ def llm_process_words(words, lm):
     all_tokens = []
 
     with torch.no_grad():
-        for idx, word in enumerate(words):
+        for idx, word in enumerate(words):  
+            word = str(word)
             word_for_model = word if idx == 0 else " " + word
             token_ids = lm.tokenizer(word_for_model, add_special_tokens=False)['input_ids']
             tokens = lm.tokenizer.convert_ids_to_tokens(token_ids)
@@ -371,6 +372,7 @@ def process_frame_captions(input_csv, output_folder, model_name, device, max_dur
         return
     
     n_rows = len(df)
+    dur = n_rows
     
     if max_dur is not None:
         if dur > max_dur:
